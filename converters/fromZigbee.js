@@ -2116,6 +2116,46 @@ const converters = {
             return Object.assign(result, libColor.syncColorState(result, meta.state, msg.endpoint, options, meta.logger));
         },
     },
+    tuya_led_controller_miboxer: {
+        cluster: 'lightingColorCtrl',
+        type: ['attributeReport', 'readResponse'],
+        options: [exposes.options.color_sync()],
+        convert: (model, msg, publish, options, meta) => {
+            const result = {};
+
+            if (msg.data.hasOwnProperty('colorTemperature')) {
+                const value = Number(msg.data['colorTemperature']);
+                //result.color_temp = mapNumberRange(value, 153, 500, 153, 500);
+				result.color_temp = value;
+            }
+
+            if (msg.data.hasOwnProperty('tuyaBrightness')) {
+                result.brightness = msg.data['tuyaBrightness'];
+            }
+
+            if (msg.data.hasOwnProperty('tuyaRgbMode')) {
+                if (msg.data['tuyaRgbMode'] === 1) {
+                    result.color_mode = constants.colorMode[0];
+                } else {
+                    result.color_mode = constants.colorMode[2];
+                }
+            }
+
+            result.color = {};
+
+            if (msg.data.hasOwnProperty('currentHue')) {
+                result.color.hue = mapNumberRange(msg.data['currentHue'], 1, 255, 0, 360);
+                result.color.h = result.color.hue;
+            }
+
+            if (msg.data.hasOwnProperty('currentSaturation')) {
+                result.color.saturation = mapNumberRange(msg.data['currentSaturation'], 1, 255, 0, 100);
+                result.color.s = result.color.saturation;
+            }
+
+            return Object.assign(result, libColor.syncColorState(result, meta.state, msg.endpoint, options, meta.logger));
+        },
+    },
     tuya_cover: {
         cluster: 'manuSpecificTuya',
         type: ['commandDataReport', 'commandDataResponse'],
